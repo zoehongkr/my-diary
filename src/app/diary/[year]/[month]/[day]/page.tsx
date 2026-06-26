@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { getPostsByDate, getPostDatesByMonth } from "@/lib/diary";
 import { DiaryPage } from "@/components/DiaryPage";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ year: string; month: string; day: string }>;
 };

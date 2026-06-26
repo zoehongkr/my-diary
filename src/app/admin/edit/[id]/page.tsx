@@ -115,6 +115,7 @@ export default function AdminEditPage() {
     }
 
     router.push("/diary");
+    router.refresh();
   }
 
   if (loading) {
