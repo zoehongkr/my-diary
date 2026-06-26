@@ -57,7 +57,9 @@ export async function getLatestPostDate() {
 }
 
 export async function getPostByDate(year: number, month: number, day: number) {
-  const isoDate = new Date(Date.UTC(year, month - 1, day)).toISOString().slice(0, 10);
+  const isoDate = `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-${day
+    .toString()
+    .padStart(2, "0")}`;
   const { data, error } = await supabaseClient
     .from("posts")
     .select("*, post_images(*)")
@@ -88,9 +90,13 @@ export async function getPostByDate(year: number, month: number, day: number) {
 
 export async function getPostDatesByMonth(year: number, month: number) {
   const startDate = `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-01`;
-  const endDate = new Date(Date.UTC(year, month, 0));
+  // Calculate last day of the provided month. `month` is 1-indexed, so pass month+1
+  // to Date.UTC and use day 0 to get the last day of the target month.
+  const endDate = new Date(Date.UTC(year, month + 1, 0));
   const lastDay = endDate.getUTCDate();
-  const endDateIso = `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-${lastDay.toString().padStart(2, "0")}`;
+  const endDateIso = `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-${lastDay
+    .toString()
+    .padStart(2, "0")}`;
 
   const { data, error } = await supabaseClient
     .from("posts")
