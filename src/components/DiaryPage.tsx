@@ -59,14 +59,15 @@ export function DiaryPage({
   monthPostDays?: number[];
 }) {
   const router = useRouter();
-  const [selectedDate] = useState<PostDate>(
+  const initialDateValue: PostDate =
     initialDate ?? {
       year: new Date().getFullYear(),
       month: new Date().getMonth() + 1,
       day: new Date().getDate(),
-    }
-  );
-  const [calendarDate, setCalendarDate] = useState<PostDate>(initialDate ?? selectedDate);
+    };
+
+  const [selectedDate, setSelectedDate] = useState<PostDate>(initialDateValue);
+  const [calendarDate, setCalendarDate] = useState<PostDate>(initialDateValue);
   const [monthPostDaysState, setMonthPostDaysState] = useState<number[] | undefined>(monthPostDays);
   const [showYearMenu, setShowYearMenu] = useState(false);
   const [showMonthMenu, setShowMonthMenu] = useState(false);
@@ -77,9 +78,11 @@ export function DiaryPage({
   const monthDateSet = useMemo(() => new Set(monthPostDaysState ?? []), [monthPostDaysState]);
 
   useEffect(() => {
-    if (!monthPostDays) return;
-    setMonthPostDaysState(monthPostDays);
-  }, [monthPostDays]);
+    if (initialDate) {
+      setSelectedDate(initialDate);
+      setCalendarDate(initialDate);
+    }
+  }, [initialDate]);
 
   useEffect(() => {
     async function loadMonthDays() {
@@ -87,13 +90,8 @@ export function DiaryPage({
       setMonthPostDaysState(monthDays);
     }
 
-    if (
-      calendarDate.year !== (initialDate ?? selectedDate).year ||
-      calendarDate.month !== (initialDate ?? selectedDate).month
-    ) {
-      loadMonthDays();
-    }
-  }, [calendarDate, initialDate, selectedDate]);
+    loadMonthDays();
+  }, [calendarDate.year, calendarDate.month]);
 
   return (
     <div className="min-h-screen bg-[#f7f4ef] px-4 py-8 text-[#1c1b18] sm:px-6 lg:px-10">
