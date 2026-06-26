@@ -147,7 +147,11 @@ export function DiaryPage({
               <div className="mb-5">
                 <p className="text-sm font-semibold text-[#5f4b35]">{formatDateLabel(selectedDate)}</p>
                 <h2 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[#2f2314]">
-                  {selectedEntry ? selectedEntry.headline : "이 날의 일기 없음"}
+                  {selectedEntry
+                    ? selectedEntry.headline
+                    : serverPost
+                    ? "일기"
+                    : "이 날의 일기 없음"}
                 </h2>
               </div>
 
