@@ -90,10 +90,8 @@ export async function getPostsByDate(year: number, month: number, day: number) {
 
 export async function getPostDatesByMonth(year: number, month: number) {
   const startDate = `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-01`;
-  // Calculate last day of the provided month. `month` is 1-indexed, so pass month+1
-  // to Date.UTC and use day 0 to get the last day of the target month.
-  const endDate = new Date(Date.UTC(year, month + 1, 0));
-  const lastDay = endDate.getUTCDate();
+  const endDate = new Date(year, month, 0);
+  const lastDay = endDate.getDate();
   const endDateIso = `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-${lastDay
     .toString()
     .padStart(2, "0")}`;
@@ -109,9 +107,14 @@ export async function getPostDatesByMonth(year: number, month: number) {
     return [];
   }
 
-  return data
-    .map((row) => Number(row.entry_date.split("-")[2]))
+  const days = data
+    .map((row) => {
+      const entryDate = typeof row.entry_date === "string" ? row.entry_date : row.entry_date?.toISOString().slice(0, 10);
+      return entryDate ? Number(entryDate.split("-")[2]) : NaN;
+    })
     .filter((day): day is number => Number.isInteger(day));
+
+  return Array.from(new Set(days)).sort((a, b) => a - b);
 }
 
 export async function getCommentsByPostId(postId: string) {
