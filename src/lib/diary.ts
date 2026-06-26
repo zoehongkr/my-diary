@@ -64,7 +64,9 @@ export async function getPostByDate(year: number, month: number, day: number) {
     .from("posts")
     .select("*, post_images(*)")
     .eq("entry_date", isoDate)
-    .single();
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   if (error) {
     return null;
