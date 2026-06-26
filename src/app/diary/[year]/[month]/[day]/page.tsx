@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getPostByDate, getPostDatesByMonth, getCommentsByPostId } from "@/lib/diary";
+import { getPostsByDate, getPostDatesByMonth } from "@/lib/diary";
 import { DiaryPage } from "@/components/DiaryPage";
 
 type Props = {
@@ -16,16 +16,14 @@ export default async function DiaryDatePage({ params }: Props) {
     notFound();
   }
 
-  const post = await getPostByDate(year, month, day);
+  const posts = await getPostsByDate(year, month, day);
   const monthDays = await getPostDatesByMonth(year, month);
-  const comments = post ? await getCommentsByPostId(post.id) : [];
 
   return (
     <DiaryPage
       initialDate={{ year, month, day }}
-      serverPost={post as any}
+      serverPosts={posts}
       monthPostDays={monthDays}
-      initialComments={comments}
     />
   );
 }

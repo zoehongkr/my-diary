@@ -20,6 +20,7 @@ export type DiaryPost = {
   content: string;
   youtubeUrl: string | null;
   images: Array<{ id: string; imageUrl: string; sortOrder: number }>;
+  createdAt: string;
 };
 
 export type MonthPostDate = {
@@ -56,7 +57,7 @@ export async function getLatestPostDate() {
   };
 }
 
-export async function getPostByDate(year: number, month: number, day: number) {
+export async function getPostsByDate(year: number, month: number, day: number) {
   const isoDate = `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-${day
     .toString()
     .padStart(2, "0")}`;
@@ -64,30 +65,27 @@ export async function getPostByDate(year: number, month: number, day: number) {
     .from("posts")
     .select("*, post_images(*)")
     .eq("entry_date", isoDate)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("created_at", { ascending: false });
 
-  if (error) {
-    return null;
+  if (error || !data) {
+    return [] as DiaryPost[];
   }
 
-  const row = data as PostRow | null;
-  if (!row) {
-    return null;
-  }
-
-  return {
-    id: row.id,
-    entryDate: row.entry_date,
-    content: row.content,
-    youtubeUrl: row.youtube_url,
-    images: row.post_images?.map((image) => ({
-      id: image.id,
-      imageUrl: image.image_url,
-      sortOrder: image.sort_order,
-    })) ?? [],
-  } as DiaryPost;
+  return data.map((row) => {
+    const typedRow = row as PostRow;
+    return {
+      id: typedRow.id,
+      entryDate: typedRow.entry_date,
+      content: typedRow.content,
+      youtubeUrl: typedRow.youtube_url,
+      createdAt: typedRow.created_at,
+      images: typedRow.post_images?.map((image) => ({
+        id: image.id,
+        imageUrl: image.image_url,
+        sortOrder: image.sort_order,
+      })) ?? [],
+    } as DiaryPost;
+  });
 }
 
 export async function getPostDatesByMonth(year: number, month: number) {

@@ -11,33 +11,6 @@ type PostDate = {
   day: number;
 };
 
-type DiaryEntry = {
-  date: PostDate;
-  headline: string;
-  paragraphs: string[];
-};
-
-const entries: DiaryEntry[] = [
-  {
-    date: { year: 2016, month: 3, day: 7 },
-    headline: "꽃샘추위와 봄의 온도차",
-    paragraphs: [
-      "오늘은 갑작스럽게 다시 쌀쌀해진 날씨 때문에 두꺼운 코트를 다시 꺼내 입었다.",
-      "교차로를 지나가며 벚꽃봉오리를 보았고, 곧 있으면 온 동네가 핑크빛으로 물들 것 같다.",
-      "저녁에는 따뜻한 차와 함께 노트에 짧은 일기를 남겼다. 감정은 사소한 순간에 더 진하게 남는다."
-    ]
-  },
-  {
-    date: { year: 2016, month: 3, day: 5 },
-    headline: "작은 출근 풍경",
-    paragraphs: [
-      "오늘 출근길에는 회사 앞 카페에서 커피를 샀다. 직원은 새로운 블렌드에 대해 이야기했다.",
-      "사무실 창가에 앉아 햇살을 받으며 하루를 계획했다. 가끔은 이렇게 평범한 하루가 가장 소중하게 느껴진다."
-    ]
-  }
-];
-
-const availableDates = [7, 5, 13, 15, 21, 22, 24, 30];
 const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 
 function formatDateLabel(date: PostDate) {
@@ -70,41 +43,36 @@ function getMonthDates(year: number, month: number) {
 
 export function DiaryPage({
   initialDate,
-  serverPost,
+  serverPosts,
   monthPostDays,
-  initialComments,
 }: {
   initialDate?: PostDate;
-  serverPost?: {
+  serverPosts?: Array<{
     id: string;
     entryDate: string;
     content: string;
     youtubeUrl: string | null;
     images: Array<{ id: string; imageUrl: string; sortOrder: number }>;
-  } | null;
+    createdAt: string;
+  }>;
   monthPostDays?: number[];
-  initialComments?: Array<{ id: string; nickname: string; content: string; created_at: string }>;
 }) {
   const router = useRouter();
-  const [selectedDate] = useState<PostDate>(initialDate ?? { year: 2016, month: 3, day: 7 });
-  const [calendarDate, setCalendarDate] = useState<PostDate>(initialDate ?? { year: 2016, month: 3, day: 7 });
+  const [selectedDate] = useState<PostDate>(
+    initialDate ?? {
+      year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1,
+      day: new Date().getDate(),
+    }
+  );
+  const [calendarDate, setCalendarDate] = useState<PostDate>(initialDate ?? selectedDate);
   const [showYearMenu, setShowYearMenu] = useState(false);
   const [showMonthMenu, setShowMonthMenu] = useState(false);
-
-  const selectedEntry = useMemo(() => {
-    if (serverPost) return null;
-    return entries.find(
-      (entry) =>
-        entry.date.year === selectedDate.year &&
-        entry.date.month === selectedDate.month &&
-        entry.date.day === selectedDate.day
-    );
-  }, [selectedDate, serverPost]);
 
   const yearOptions = Array.from({ length: 21 }, (_, idx) => 2016 + idx);
   const monthOptions = Array.from({ length: 12 }, (_, idx) => idx + 1);
   const calendarRows = getMonthDates(calendarDate.year, calendarDate.month);
-  const monthDateSet = useMemo(() => new Set(monthPostDays ?? availableDates), [monthPostDays]);
+  const monthDateSet = useMemo(() => new Set(monthPostDays ?? []), [monthPostDays]);
 
   return (
     <div className="min-h-screen bg-[#f7f4ef] px-4 py-8 text-[#1c1b18] sm:px-6 lg:px-10">
@@ -150,57 +118,64 @@ export function DiaryPage({
               <div className="mb-5">
                 <p className="text-sm font-semibold text-[#5f4b35]">{formatDateLabel(selectedDate)}</p>
                 <h2 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[#2f2314]">
-                  {selectedEntry
-                    ? selectedEntry.headline
-                    : serverPost
-                    ? "일기"
-                    : "이 날의 일기 없음"}
+                  {serverPosts && serverPosts.length > 0 ? "일기" : "이 날의 일기 없음"}
                 </h2>
               </div>
 
               <div className="space-y-5 text-sm leading-8 text-[#40382f]">
-                  {serverPost ? (
-                    <>
-                      {serverPost.youtubeUrl ? (
-                        <div className="mb-5 aspect-video overflow-hidden rounded-3xl bg-black">
-                          <iframe
-                            className="h-full w-full"
-                            src={(() => {
-                              const m = serverPost.youtubeUrl?.match(/(?:youtu\.be\/(.+)|youtube\.com\/(?:watch\?v=|embed\/)([^&\n?#]+))/);
-                              const vid = m ? m[1] || m[2] : null;
-                              return vid ? `https://www.youtube.com/embed/${vid}` : "";
-                            })()}
-                            title="YouTube video"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        </div>
-                      ) : null}
+                {serverPosts && serverPosts.length > 0 ? (
+                  <div className="space-y-10">
+                    {serverPosts.map((post) => (
+                      <article key={post.id} className="rounded-[32px] border border-[#e7e0d2] bg-white p-6 shadow-[0_18px_50px_rgba(101,76,34,0.08)]">
+                        {post.youtubeUrl ? (
+                          <div className="mb-5 aspect-video overflow-hidden rounded-3xl bg-black">
+                            <iframe
+                              className="h-full w-full"
+                              src={(() => {
+                                const m = post.youtubeUrl?.match(/(?:youtu\.be\/(.+)|youtube\.com\/(?:watch\?v=|embed\/)([^&\n?#]+))/);
+                                const vid = m ? m[1] || m[2] : null;
+                                return vid ? `https://www.youtube.com/embed/${vid}` : "";
+                              })()}
+                              title="YouTube video"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </div>
+                        ) : null}
 
-                      {serverPost.images.length > 0 ? (
-                        <div className="mb-6 grid gap-4 sm:grid-cols-2">
-                          {serverPost.images
-                            .sort((a, b) => a.sortOrder - b.sortOrder)
-                            .map((image) => (
-                              <img key={image.id} src={image.imageUrl} alt="Diary image" className="h-64 w-full rounded-3xl object-cover" />
-                            ))}
-                        </div>
-                      ) : null}
+                        {post.images.length > 0 ? (
+                          <div className="mb-6 grid gap-4 sm:grid-cols-2">
+                            {post.images
+                              .sort((a, b) => a.sortOrder - b.sortOrder)
+                              .map((image) => (
+                                <img key={image.id} src={image.imageUrl} alt="Diary image" className="h-64 w-full rounded-3xl object-cover" />
+                              ))}
+                          </div>
+                        ) : null}
 
-                      <div className="space-y-5 text-sm leading-8 text-[#40382f]">
-                        {serverPost.content.split("\n").map((line, index) => (
-                          <p key={index}>{line}</p>
-                        ))}
-                      </div>
-                      <Comments postId={serverPost.id} initial={initialComments ?? []} />
-                    </>
-                  ) : selectedEntry ? (
-                    selectedEntry.paragraphs.map((paragraph, index) => (
-                      <p key={index}>{paragraph}</p>
-                    ))
-                  ) : (
-                    <p>선택한 날짜에 해당하는 일기가 없습니다. 캘린더에서 다른 날짜를 선택해 보세요.</p>
-                  )}
+                        <div className="space-y-5 text-sm leading-8 text-[#40382f]">
+                          {post.content.split("\n").map((line, index) => (
+                            <p key={index}>{line}</p>
+                          ))}
+                        </div>
+
+                        <div className="mt-6 flex items-center justify-between gap-3 text-sm text-[#6b5b4a]">
+                          <span>작성일: {new Date(post.createdAt).toLocaleString()}</span>
+                          <a
+                            href={`/admin/edit/${post.id}`}
+                            className="rounded-full border border-[#d8d0c1] bg-[#fbf7f0] px-4 py-2 font-semibold text-[#3d3428] hover:bg-[#fff4df]"
+                          >
+                            수정
+                          </a>
+                        </div>
+
+                        <Comments postId={post.id} />
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p>선택한 날짜에 해당하는 일기가 없습니다. 캘린더에서 다른 날짜를 선택해 보세요.</p>
+                )}
               </div>
             </article>
           </section>
