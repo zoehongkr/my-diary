@@ -269,7 +269,7 @@ export function DiaryPage({
                   {selectedDate.year}년 ⌄
                 </button>
                 {showYearMenu && (
-                  <div className="absolute left-0 top-full z-10 mt-2 w-full rounded-2xl border border-[#d8d0c1] bg-white shadow-xl">
+                  <div className="absolute left-0 top-full z-10 mt-2 w-full max-h-72 overflow-y-auto rounded-2xl border border-[#d8d0c1] bg-white shadow-xl">
                     {yearOptions.map((year) => (
                       <button
                         key={year}
@@ -299,7 +299,7 @@ export function DiaryPage({
                   {selectedDate.month}월 ⌄
                 </button>
                 {showMonthMenu && (
-                  <div className="absolute left-0 top-full z-10 mt-2 w-full rounded-2xl border border-[#d8d0c1] bg-white shadow-xl">
+                  <div className="absolute left-0 top-full z-10 mt-2 w-full max-h-72 overflow-y-auto rounded-2xl border border-[#d8d0c1] bg-white shadow-xl">
                     {monthOptions.map((month) => (
                       <button
                         key={month}
