@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminActions } from "@/components/AdminActions";
 import Comments from "@/components/Comments";
+import { getPostDatesByMonth } from "@/lib/diary";
 
 type PostDate = {
   year: number;
@@ -66,13 +67,33 @@ export function DiaryPage({
     }
   );
   const [calendarDate, setCalendarDate] = useState<PostDate>(initialDate ?? selectedDate);
+  const [monthPostDaysState, setMonthPostDaysState] = useState<number[] | undefined>(monthPostDays);
   const [showYearMenu, setShowYearMenu] = useState(false);
   const [showMonthMenu, setShowMonthMenu] = useState(false);
 
   const yearOptions = Array.from({ length: 21 }, (_, idx) => 2016 + idx);
   const monthOptions = Array.from({ length: 12 }, (_, idx) => idx + 1);
   const calendarRows = getMonthDates(calendarDate.year, calendarDate.month);
-  const monthDateSet = useMemo(() => new Set(monthPostDays ?? []), [monthPostDays]);
+  const monthDateSet = useMemo(() => new Set(monthPostDaysState ?? []), [monthPostDaysState]);
+
+  useEffect(() => {
+    if (!monthPostDays) return;
+    setMonthPostDaysState(monthPostDays);
+  }, [monthPostDays]);
+
+  useEffect(() => {
+    async function loadMonthDays() {
+      const monthDays = await getPostDatesByMonth(calendarDate.year, calendarDate.month);
+      setMonthPostDaysState(monthDays);
+    }
+
+    if (
+      calendarDate.year !== (initialDate ?? selectedDate).year ||
+      calendarDate.month !== (initialDate ?? selectedDate).month
+    ) {
+      loadMonthDays();
+    }
+  }, [calendarDate, initialDate, selectedDate]);
 
   return (
     <div className="min-h-screen bg-[#f7f4ef] px-4 py-8 text-[#1c1b18] sm:px-6 lg:px-10">
@@ -182,7 +203,7 @@ export function DiaryPage({
 
           <aside className="rounded-[32px] border border-[#e7e0d2] bg-[#fcfaf6] p-6 shadow-[0_18px_50px_rgba(101,76,34,0.08)]">
             <div className="text-center text-sm font-semibold text-[#5f4b35]">
-              {selectedDate.year}년&nbsp;{selectedDate.month}월
+              {calendarDate.year}년&nbsp;{calendarDate.month}월
             </div>
 
             <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-[0.18em] text-[#5f4b35]">
@@ -235,11 +256,16 @@ export function DiaryPage({
               <button
                 type="button"
                 onClick={() =>
-                  setCalendarDate((prev) => ({
-                    year: prev.month === 1 ? prev.year - 1 : prev.year,
-                    month: prev.month === 1 ? 12 : prev.month - 1,
-                    day: prev.day,
-                  }))
+                  setCalendarDate((prev) => {
+                    const prevMonth = prev.month - 1;
+                    const year = prevMonth < 1 ? prev.year - 1 : prev.year;
+                    const month = prevMonth < 1 ? 12 : prevMonth;
+                    return {
+                      year,
+                      month,
+                      day: Math.min(prev.day, new Date(year, month, 0).getDate()),
+                    };
+                  })
                 }
               >
                 이전달 &lt;&lt;
@@ -247,11 +273,16 @@ export function DiaryPage({
               <button
                 type="button"
                 onClick={() =>
-                  setCalendarDate((prev) => ({
-                    year: prev.month === 12 ? prev.year + 1 : prev.year,
-                    month: prev.month === 12 ? 1 : prev.month + 1,
-                    day: prev.day,
-                  }))
+                  setCalendarDate((prev) => {
+                    const nextMonth = prev.month + 1;
+                    const year = nextMonth > 12 ? prev.year + 1 : prev.year;
+                    const month = nextMonth > 12 ? 1 : nextMonth;
+                    return {
+                      year,
+                      month,
+                      day: Math.min(prev.day, new Date(year, month, 0).getDate()),
+                    };
+                  })
                 }
               >
                 &gt;&gt; 다음달
@@ -278,11 +309,11 @@ export function DiaryPage({
                           setShowYearMenu(false);
                         }}
                         className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm ${
-                          year === selectedDate.year ? "bg-[#e8d7b4] text-[#1f1a17]" : "text-[#4a4135]"
+                          year === calendarDate.year ? "bg-[#e8d7b4] text-[#1f1a17]" : "text-[#4a4135]"
                         }`}
                       >
                         <span>{year}년</span>
-                        {year === selectedDate.year ? <span>✓</span> : null}
+                        {year === calendarDate.year ? <span>✓</span> : null}
                       </button>
                     ))}
                   </div>
@@ -308,11 +339,11 @@ export function DiaryPage({
                           setShowMonthMenu(false);
                         }}
                         className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm ${
-                          month === selectedDate.month ? "bg-[#e8d7b4] text-[#1f1a17]" : "text-[#4a4135]"
+                          month === calendarDate.month ? "bg-[#e8d7b4] text-[#1f1a17]" : "text-[#4a4135]"
                         }`}
                       >
                         <span>{month}월</span>
-                        {month === selectedDate.month ? <span>✓</span> : null}
+                        {month === calendarDate.month ? <span>✓</span> : null}
                       </button>
                     ))}
                   </div>
