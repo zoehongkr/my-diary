@@ -98,7 +98,7 @@ export function DiaryPage({
     );
   }, [selectedDate, serverPost]);
 
-  const yearOptions = [2015, 2016, 2017];
+  const yearOptions = Array.from({ length: 21 }, (_, idx) => 2016 + idx);
   const monthOptions = Array.from({ length: 12 }, (_, idx) => idx + 1);
   const calendarRows = getMonthDates(selectedDate.year, selectedDate.month);
   const monthDateSet = new Set(monthPostDays ?? availableDates);
