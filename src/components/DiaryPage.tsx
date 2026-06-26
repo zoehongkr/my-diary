@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AdminActions } from "@/components/AdminActions";
 import Comments from "@/components/Comments";
 
@@ -84,7 +85,9 @@ export function DiaryPage({
   monthPostDays?: number[];
   initialComments?: Array<{ id: string; nickname: string; content: string; created_at: string }>;
 }) {
-  const [selectedDate, setSelectedDate] = useState<PostDate>(initialDate ?? { year: 2016, month: 3, day: 7 });
+  const router = useRouter();
+  const [selectedDate] = useState<PostDate>(initialDate ?? { year: 2016, month: 3, day: 7 });
+  const [calendarDate, setCalendarDate] = useState<PostDate>(initialDate ?? { year: 2016, month: 3, day: 7 });
   const [showYearMenu, setShowYearMenu] = useState(false);
   const [showMonthMenu, setShowMonthMenu] = useState(false);
 
@@ -100,8 +103,8 @@ export function DiaryPage({
 
   const yearOptions = Array.from({ length: 21 }, (_, idx) => 2016 + idx);
   const monthOptions = Array.from({ length: 12 }, (_, idx) => idx + 1);
-  const calendarRows = getMonthDates(selectedDate.year, selectedDate.month);
-  const monthDateSet = new Set(monthPostDays ?? availableDates);
+  const calendarRows = getMonthDates(calendarDate.year, calendarDate.month);
+  const monthDateSet = useMemo(() => new Set(monthPostDays ?? availableDates), [monthPostDays]);
 
   return (
     <div className="min-h-screen bg-[#f7f4ef] px-4 py-8 text-[#1c1b18] sm:px-6 lg:px-10">
@@ -223,8 +226,8 @@ export function DiaryPage({
                       return <div key={idx} className="h-10 rounded-2xl bg-transparent" />;
                     }
 
-                    const hasPost = availableDates.includes(date);
-                    const isSelected = date === selectedDate.day;
+                    const hasPost = monthDateSet.has(date);
+                    const isSelected = date === selectedDate.day && calendarDate.year === selectedDate.year && calendarDate.month === selectedDate.month;
                     const isSunday = idx === 0;
                     const isSaturday = idx === 6;
 
@@ -232,15 +235,18 @@ export function DiaryPage({
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => setSelectedDate({ ...selectedDate, day: date })}
+                        onClick={() => {
+                          if (!hasPost) return;
+                          router.push(`/diary/${calendarDate.year}/${calendarDate.month}/${date}`);
+                        }}
                         disabled={!hasPost}
                         className={`h-10 rounded-2xl text-sm font-semibold transition ${
                           isSelected
                             ? "bg-[#7b541f] text-white"
                             : hasPost
                             ? "bg-[#fff6eb] text-[#423627] hover:bg-[#f1e3cb]"
-                            : "bg-transparent text-[#b8b0a4]"
-                        } ${isSunday ? "text-[#be5b8a]" : isSaturday ? "text-[#3b5fbc]" : ""}`}
+                            : "bg-transparent text-[#b8b0a4] cursor-default"
+                        } ${!hasPost ? "pointer-events-none" : "cursor-pointer"} ${isSunday ? "text-[#be5b8a]" : isSaturday ? "text-[#3b5fbc]" : ""}`}
                       >
                         {date}
                       </button>
@@ -251,10 +257,28 @@ export function DiaryPage({
             </div>
 
             <div className="mt-6 flex items-center justify-between text-sm font-semibold text-[#5f4b35]">
-              <button type="button" onClick={() => setSelectedDate((prev) => ({ ...prev, month: Math.max(1, prev.month - 1) }))}>
+              <button
+                type="button"
+                onClick={() =>
+                  setCalendarDate((prev) => ({
+                    year: prev.month === 1 ? prev.year - 1 : prev.year,
+                    month: prev.month === 1 ? 12 : prev.month - 1,
+                    day: prev.day,
+                  }))
+                }
+              >
                 이전달 &lt;&lt;
               </button>
-              <button type="button" onClick={() => setSelectedDate((prev) => ({ ...prev, month: Math.min(12, prev.month + 1) }))}>
+              <button
+                type="button"
+                onClick={() =>
+                  setCalendarDate((prev) => ({
+                    year: prev.month === 12 ? prev.year + 1 : prev.year,
+                    month: prev.month === 12 ? 1 : prev.month + 1,
+                    day: prev.day,
+                  }))
+                }
+              >
                 &gt;&gt; 다음달
               </button>
             </div>
@@ -266,7 +290,7 @@ export function DiaryPage({
                   onClick={() => setShowYearMenu((current) => !current)}
                   className="w-full rounded-2xl border border-[#d8d0c1] bg-white px-4 py-3 text-left shadow-sm"
                 >
-                  {selectedDate.year}년 ⌄
+                  {calendarDate.year}년 ⌄
                 </button>
                 {showYearMenu && (
                   <div className="absolute left-0 top-full z-10 mt-2 w-full max-h-72 overflow-y-auto rounded-2xl border border-[#d8d0c1] bg-white shadow-xl">
@@ -275,7 +299,7 @@ export function DiaryPage({
                         key={year}
                         type="button"
                         onClick={() => {
-                          setSelectedDate((prev) => ({ ...prev, year }));
+                          setCalendarDate((prev) => ({ ...prev, year }));
                           setShowYearMenu(false);
                         }}
                         className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm ${
@@ -296,7 +320,7 @@ export function DiaryPage({
                   onClick={() => setShowMonthMenu((current) => !current)}
                   className="w-full rounded-2xl border border-[#d8d0c1] bg-white px-4 py-3 text-left shadow-sm"
                 >
-                  {selectedDate.month}월 ⌄
+                  {calendarDate.month}월 ⌄
                 </button>
                 {showMonthMenu && (
                   <div className="absolute left-0 top-full z-10 mt-2 w-full max-h-72 overflow-y-auto rounded-2xl border border-[#d8d0c1] bg-white shadow-xl">
@@ -305,7 +329,7 @@ export function DiaryPage({
                         key={month}
                         type="button"
                         onClick={() => {
-                          setSelectedDate((prev) => ({ ...prev, month }));
+                          setCalendarDate((prev) => ({ ...prev, month }));
                           setShowMonthMenu(false);
                         }}
                         className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm ${

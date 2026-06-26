@@ -112,8 +112,8 @@ export async function getPostDatesByMonth(year: number, month: number) {
   }
 
   return data
-    .map((row) => new Date(row.entry_date).getUTCDate())
-    .filter((day): day is number => typeof day === "number");
+    .map((row) => Number(row.entry_date.split("-")[2]))
+    .filter((day): day is number => Number.isInteger(day));
 }
 
 export async function getCommentsByPostId(postId: string) {
