@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AdminActions } from "@/components/AdminActions";
+import Comments from "@/components/Comments";
 
 type PostDate = {
   year: number;
@@ -66,24 +67,41 @@ function getMonthDates(year: number, month: number) {
   return weeks;
 }
 
-export function DiaryPage() {
-  const [selectedDate, setSelectedDate] = useState<PostDate>({ year: 2016, month: 3, day: 7 });
+export function DiaryPage({
+  initialDate,
+  serverPost,
+  monthPostDays,
+  initialComments,
+}: {
+  initialDate?: PostDate;
+  serverPost?: {
+    id: string;
+    entryDate: string;
+    content: string;
+    youtubeUrl: string | null;
+    images: Array<{ id: string; imageUrl: string; sortOrder: number }>;
+  } | null;
+  monthPostDays?: number[];
+  initialComments?: Array<{ id: string; nickname: string; content: string; created_at: string }>;
+}) {
+  const [selectedDate, setSelectedDate] = useState<PostDate>(initialDate ?? { year: 2016, month: 3, day: 7 });
   const [showYearMenu, setShowYearMenu] = useState(false);
   const [showMonthMenu, setShowMonthMenu] = useState(false);
 
-  const selectedEntry = useMemo(
-    () => entries.find(
+  const selectedEntry = useMemo(() => {
+    if (serverPost) return null;
+    return entries.find(
       (entry) =>
         entry.date.year === selectedDate.year &&
         entry.date.month === selectedDate.month &&
         entry.date.day === selectedDate.day
-    ),
-    [selectedDate]
-  );
+    );
+  }, [selectedDate, serverPost]);
 
   const yearOptions = [2015, 2016, 2017];
   const monthOptions = Array.from({ length: 12 }, (_, idx) => idx + 1);
   const calendarRows = getMonthDates(selectedDate.year, selectedDate.month);
+  const monthDateSet = new Set(monthPostDays ?? availableDates);
 
   return (
     <div className="min-h-screen bg-[#f7f4ef] px-4 py-8 text-[#1c1b18] sm:px-6 lg:px-10">
@@ -134,13 +152,48 @@ export function DiaryPage() {
               </div>
 
               <div className="space-y-5 text-sm leading-8 text-[#40382f]">
-                {selectedEntry ? (
-                  selectedEntry.paragraphs.map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))
-                ) : (
-                  <p>선택한 날짜에 해당하는 일기가 없습니다. 캘린더에서 다른 날짜를 선택해 보세요.</p>
-                )}
+                  {serverPost ? (
+                    <>
+                      {serverPost.youtubeUrl ? (
+                        <div className="mb-5 aspect-video overflow-hidden rounded-3xl bg-black">
+                          <iframe
+                            className="h-full w-full"
+                            src={(() => {
+                              const m = serverPost.youtubeUrl?.match(/(?:youtu\.be\/(.+)|youtube\.com\/(?:watch\?v=|embed\/)([^&\n?#]+))/);
+                              const vid = m ? m[1] || m[2] : null;
+                              return vid ? `https://www.youtube.com/embed/${vid}` : "";
+                            })()}
+                            title="YouTube video"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      ) : null}
+
+                      {serverPost.images.length > 0 ? (
+                        <div className="mb-6 grid gap-4 sm:grid-cols-2">
+                          {serverPost.images
+                            .sort((a, b) => a.sortOrder - b.sortOrder)
+                            .map((image) => (
+                              <img key={image.id} src={image.imageUrl} alt="Diary image" className="h-64 w-full rounded-3xl object-cover" />
+                            ))}
+                        </div>
+                      ) : null}
+
+                      <div className="space-y-5 text-sm leading-8 text-[#40382f]">
+                        {serverPost.content.split("\n").map((line, index) => (
+                          <p key={index}>{line}</p>
+                        ))}
+                      </div>
+                      <Comments postId={serverPost.id} initial={initialComments ?? []} />
+                    </>
+                  ) : selectedEntry ? (
+                    selectedEntry.paragraphs.map((paragraph, index) => (
+                      <p key={index}>{paragraph}</p>
+                    ))
+                  ) : (
+                    <p>선택한 날짜에 해당하는 일기가 없습니다. 캘린더에서 다른 날짜를 선택해 보세요.</p>
+                  )}
               </div>
             </article>
           </section>
