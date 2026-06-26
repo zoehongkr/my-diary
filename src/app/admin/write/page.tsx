@@ -88,7 +88,7 @@ export default function AdminWritePage() {
 
       setSuccessMessage("일기가 성공적으로 저장되었습니다.");
       const [year, month, day] = entryDate.split("-");
-      router.push(`/diary/${Number(year)}/${Number(month)}/${Number(day)}`);
+      router.push(`https://my-diary-six-brown.vercel.app/diary/${Number(year)}/${Number(month)}/${Number(day)}`);
     } catch (error) {
       setErrorMessage("일기 저장 중 오류가 발생했습니다. 다시 시도해 주세요.");
       setIsSubmitting(false);

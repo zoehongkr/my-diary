@@ -97,7 +97,7 @@ export default function AdminEditPage() {
         return;
       }
 
-      router.push(`/diary/${new Date(entryDate).getUTCFullYear()}/${new Date(entryDate).getUTCMonth()+1}/${new Date(entryDate).getUTCDate()}`);
+      router.push(`https://my-diary-six-brown.vercel.app/diary/${new Date(entryDate).getUTCFullYear()}/${new Date(entryDate).getUTCMonth()+1}/${new Date(entryDate).getUTCDate()}`);
     } catch (err) {
       setError("수정 중 오류가 발생했습니다.");
       setIsSubmitting(false);
