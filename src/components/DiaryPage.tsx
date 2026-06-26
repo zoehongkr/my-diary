@@ -204,6 +204,16 @@ export function DiaryPage({
               {calendarDate.year}년&nbsp;{calendarDate.month}월
             </div>
 
+            <div className="mt-4 rounded-3xl border border-[#e7e0d2] bg-[#fffaf0] p-4 text-xs text-[#3d3428]">
+              <div className="font-semibold text-[#5f4b35]">debug</div>
+              <div className="mt-2">
+                <div>selectedDate: {JSON.stringify(selectedDate)}</div>
+                <div>calendarDate: {JSON.stringify(calendarDate)}</div>
+                <div>monthPostDays: {JSON.stringify(monthPostDaysState)}</div>
+                <div>initialMonthPostDays: {JSON.stringify(monthPostDays)}</div>
+              </div>
+            </div>
+
             <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-[0.18em] text-[#5f4b35]">
               {daysOfWeek.map((day, index) => (
                 <div key={day} className={index === 0 ? "text-[#be5b8a]" : index === 6 ? "text-[#3b5fbc]" : "text-[#2e2a24]"}>
