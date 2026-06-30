@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AdminActions } from "@/components/AdminActions";
 import Comments from "@/components/Comments";
 import { getPostDatesByMonth } from "@/lib/diary";
+import { supabaseClient } from "@/lib/supabaseClient";
 
 type PostDate = {
   year: number;
@@ -16,6 +17,12 @@ const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 
 function formatDateLabel(date: PostDate) {
   return `${date.year}년 ${date.month}월 ${date.day}일`;
+}
+
+function formatCreatedAt(value: string) {
+  const date = new Date(value);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function getMonthDates(year: number, month: number) {
@@ -52,6 +59,7 @@ export function DiaryPage({
     id: string;
     entryDate: string;
     content: string;
+    title?: string | null;
     youtubeUrl: string | null;
     images: Array<{ id: string; imageUrl: string; sortOrder: number }>;
     createdAt: string;
@@ -69,13 +77,13 @@ export function DiaryPage({
   const [selectedDate, setSelectedDate] = useState<PostDate>(initialDateValue);
   const [calendarDate, setCalendarDate] = useState<PostDate>(initialDateValue);
   const [monthPostDaysState, setMonthPostDaysState] = useState<number[] | undefined>(monthPostDays);
-  const [showYearMenu, setShowYearMenu] = useState(false);
-  const [showMonthMenu, setShowMonthMenu] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const yearOptions = Array.from({ length: 21 }, (_, idx) => 2016 + idx);
   const monthOptions = Array.from({ length: 12 }, (_, idx) => idx + 1);
   const calendarRows = getMonthDates(calendarDate.year, calendarDate.month);
   const monthDateSet = useMemo(() => new Set(monthPostDaysState ?? []), [monthPostDaysState]);
+  const formattedDiaryHeading = `${selectedDate.year}-${String(selectedDate.month).padStart(2, "0")}-${String(selectedDate.day).padStart(2, "0")}`;
 
   useEffect(() => {
     if (initialDate) {
@@ -83,6 +91,24 @@ export function DiaryPage({
       setCalendarDate(initialDate);
     }
   }, [initialDate]);
+
+  useEffect(() => {
+    let isMounted = true;
+    supabaseClient.auth.getSession().then(({ data }) => {
+      if (!isMounted) return;
+      setIsAuthenticated(Boolean(data.session?.user));
+    });
+
+    const { data: authListener } = supabaseClient.auth.onAuthStateChange((_, session) => {
+      if (!isMounted) return;
+      setIsAuthenticated(Boolean(session?.user));
+    });
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     async function loadMonthDays() {
@@ -94,9 +120,9 @@ export function DiaryPage({
   }, [calendarDate.year, calendarDate.month]);
 
   return (
-    <div className="min-h-screen bg-[#f7f4ef] px-4 py-8 text-[#1c1b18] sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-7xl rounded-[32px] border border-[#d8d0c1] bg-white p-5 shadow-[0_18px_80px_rgba(98,81,55,0.08)] sm:p-8">
-        <header className="flex flex-col gap-5 border-b border-[#e7e0d2] pb-5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-screen bg-white px-4 py-8 text-[#111] sm:px-6 lg:px-16">
+      <div className="mx-auto max-w-5xl rounded-xl bg-white p-5 sm:p-8">
+        <header className="flex flex-col gap-5 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#1f1a17] text-sm font-bold uppercase tracking-[0.22em] text-[#f8e6c8]">
               ICON
@@ -117,27 +143,19 @@ export function DiaryPage({
             <AdminActions />
             <a
               href="#"
-              className="inline-flex items-center rounded-full bg-[#f8ecd5] px-4 py-2 text-sm font-semibold text-[#5f4b35] shadow-sm shadow-[#d6c2a3]/50"
+              className="inline-flex items-center rounded-sm border border-[#111] bg-white px-3 py-1.5 text-sm font-semibold text-[#111]"
             >
               ◀ 처음으로
             </a>
           </div>
         </header>
 
-        <main className="mt-8 grid gap-8 lg:grid-cols-[0.65fr_0.35fr] lg:gap-10">
-          <section className="space-y-6 border border-[#e7e0d2] bg-[#fbf7f0] p-8 text-[#221f1a] shadow-[0_18px_50px_rgba(101,76,34,0.08)]">
-            <div className="space-y-4">
-              <h1 className="text-[min(3.4rem,6vw)] font-serif text-[#7b541f] leading-tight">
-                일기
-              </h1>
-              <div className="h-px w-full bg-[#d8d0c1]" />
-            </div>
-
+        <main className="mt-8 grid gap-8 lg:grid-cols-[0.72fr_0.28fr] lg:gap-10">
+          <section className="space-y-6 bg-white p-8 text-[#111]">
             <article>
-              <div className="mb-5">
-                <p className="text-sm font-semibold text-[#5f4b35]">{formatDateLabel(selectedDate)}</p>
-                <h2 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[#2f2314]">
-                  {serverPosts && serverPosts.length > 0 ? "일기" : "이 날의 일기 없음"}
+              <div className="mb-6">
+                <h2 className="text-[1.75rem] font-serif font-semibold text-[#111] tracking-[-0.01em]">
+                  {formattedDiaryHeading}
                 </h2>
               </div>
 
@@ -145,9 +163,12 @@ export function DiaryPage({
                 {serverPosts && serverPosts.length > 0 ? (
                   <div className="space-y-10">
                     {serverPosts.map((post) => (
-                      <article key={post.id} className="rounded-[32px] border border-[#e7e0d2] bg-white p-6 shadow-[0_18px_50px_rgba(101,76,34,0.08)]">
+                      <article key={post.id} className="border-t border-[#d3d0cc] bg-transparent px-0 pt-8">
+                        <div className="mb-3">
+                          <h3 className="text-[1.05rem] font-serif font-semibold text-[#111]">{post.title || "일기"}</h3>
+                        </div>
                         {post.youtubeUrl ? (
-                          <div className="mb-5 aspect-video overflow-hidden rounded-3xl bg-black">
+                          <div className="mb-5 aspect-video overflow-hidden rounded-2xl bg-black">
                             <iframe
                               className="h-full w-full"
                               src={(() => {
@@ -167,25 +188,29 @@ export function DiaryPage({
                             {post.images
                               .sort((a, b) => a.sortOrder - b.sortOrder)
                               .map((image) => (
-                                <img key={image.id} src={image.imageUrl} alt="Diary image" className="h-64 w-full rounded-3xl object-cover" />
+                                <img key={image.id} src={image.imageUrl} alt="Diary image" className="h-64 w-full rounded-2xl object-cover" />
                               ))}
                           </div>
                         ) : null}
 
-                        <div className="space-y-5 text-sm leading-8 text-[#40382f]">
+                        <div className="space-y-5 text-sm leading-8 text-[#40382f] max-w-prose">
                           {post.content.split("\n").map((line, index) => (
                             <p key={index}>{line}</p>
                           ))}
                         </div>
 
-                        <div className="mt-6 flex items-center justify-between gap-3 text-sm text-[#6b5b4a]">
-                          <span>작성일: {new Date(post.createdAt).toLocaleString()}</span>
-                          <a
-                            href={`/admin/edit/${post.id}`}
-                            className="rounded-full border border-[#d8d0c1] bg-[#fbf7f0] px-4 py-2 font-semibold text-[#3d3428] hover:bg-[#fff4df]"
-                          >
-                            수정
-                          </a>
+                        <div className="mt-4 flex items-center justify-end gap-3 text-[#7b6a54]">
+                          <span className="text-[12px] leading-tight text-[#7b6a54]">
+                            작성: {formatCreatedAt(post.createdAt)}
+                          </span>
+                          {isAuthenticated ? (
+                            <a
+                              href={`/admin/edit/${post.id}`}
+                              className="rounded-[2px] border border-[#111] bg-white px-2 py-1 text-[12px] font-semibold leading-tight text-[#111]"
+                            >
+                              수정
+                            </a>
+                          ) : null}
                         </div>
 
                         <Comments postId={post.id} />
@@ -199,25 +224,25 @@ export function DiaryPage({
             </article>
           </section>
 
-          <aside className="rounded-[32px] border border-[#e7e0d2] bg-[#fcfaf6] p-6 shadow-[0_18px_50px_rgba(101,76,34,0.08)]">
+          <aside className="bg-white pt-8 pb-5 px-5 text-[#1f1b18]">
             <div className="text-center text-sm font-semibold text-[#5f4b35]">
               {calendarDate.year}년&nbsp;{calendarDate.month}월
             </div>
 
-            <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-[0.18em] text-[#5f4b35]">
+            <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#5f4b35]">
               {daysOfWeek.map((day, index) => (
-                <div key={day} className={index === 0 ? "text-[#be5b8a]" : index === 6 ? "text-[#3b5fbc]" : "text-[#2e2a24]"}>
+                <div key={day} className={index === 0 ? "text-[#be5b8a]" : index === 6 ? "text-[#3b5fbc]" : "text-[#5f4b35]"}>
                   {day}
                 </div>
               ))}
             </div>
 
-            <div className="mt-4 grid gap-2">
+            <div className="mt-3 grid gap-1">
               {calendarRows.map((week, index) => (
                 <div key={index} className="grid grid-cols-7 gap-2">
                   {week.map((date, idx) => {
                     if (date === null) {
-                      return <div key={idx} className="h-10 rounded-2xl bg-transparent" />;
+                      return <div key={idx} className="h-9 bg-transparent" />;
                     }
 
                     const hasPost = monthDateSet.has(date);
@@ -234,13 +259,13 @@ export function DiaryPage({
                           router.push(`/diary/${calendarDate.year}/${calendarDate.month}/${date}`);
                         }}
                         disabled={!hasPost}
-                        className={`h-10 rounded-2xl text-sm font-semibold transition ${
+                        className={`h-9 min-h-[2.25rem] rounded-sm px-0 text-sm transition ${
                           isSelected
-                            ? "bg-[#7b541f] text-white"
+                            ? "font-semibold text-[#111]"
                             : hasPost
-                            ? "bg-[#fff6eb] text-[#423627] hover:bg-[#f1e3cb]"
-                            : "bg-transparent text-[#b8b0a4] cursor-default"
-                        } ${!hasPost ? "pointer-events-none" : "cursor-pointer"} ${isSunday ? "text-[#be5b8a]" : isSaturday ? "text-[#3b5fbc]" : ""}`}
+                            ? "font-medium text-[#111]"
+                            : "text-[#b5b1aa]"
+                        } ${!hasPost ? "pointer-events-none cursor-default" : "cursor-pointer hover:text-[#000]"}`}
                       >
                         {date}
                       </button>
@@ -250,7 +275,7 @@ export function DiaryPage({
               ))}
             </div>
 
-            <div className="mt-6 flex items-center justify-between text-sm font-semibold text-[#5f4b35]">
+            <div className="mt-6 flex items-center justify-between text-sm text-[#7a7a7a]">
               <button
                 type="button"
                 onClick={() =>
@@ -265,8 +290,9 @@ export function DiaryPage({
                     };
                   })
                 }
+                className="hover:text-[#1f1b18]"
               >
-                이전달 &lt;&lt;
+                이전달
               </button>
               <button
                 type="button"
@@ -282,70 +308,42 @@ export function DiaryPage({
                     };
                   })
                 }
+                className="hover:text-[#1f1b18]"
               >
-                &gt;&gt; 다음달
+                다음달
               </button>
             </div>
 
-            <div className="mt-5 space-y-3 text-sm text-[#3d3428]">
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowYearMenu((current) => !current)}
-                  className="w-full rounded-2xl border border-[#d8d0c1] bg-white px-4 py-3 text-left shadow-sm"
-                >
-                  {calendarDate.year}년 ⌄
-                </button>
-                {showYearMenu && (
-                  <div className="absolute left-0 top-full z-10 mt-2 w-full max-h-72 overflow-y-auto rounded-2xl border border-[#d8d0c1] bg-white shadow-xl">
+            <div className="mt-5 text-sm text-[#3d3428]">
+              <div className="flex justify-center items-center gap-[10px]">
+                <div className="relative inline-flex">
+                  <select
+                    value={calendarDate.year}
+                    onChange={(e) => setCalendarDate((prev) => ({ ...prev, year: Number(e.target.value) }))}
+                    className="calendar-native-select calendar-native-select-year"
+                  >
                     {yearOptions.map((year) => (
-                      <button
-                        key={year}
-                        type="button"
-                        onClick={() => {
-                          setCalendarDate((prev) => ({ ...prev, year }));
-                          setShowYearMenu(false);
-                        }}
-                        className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm ${
-                          year === calendarDate.year ? "bg-[#e8d7b4] text-[#1f1a17]" : "text-[#4a4135]"
-                        }`}
-                      >
-                        <span>{year}년</span>
-                        {year === calendarDate.year ? <span>✓</span> : null}
-                      </button>
+                      <option key={year} value={year}>
+                        {year}년
+                      </option>
                     ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowMonthMenu((current) => !current)}
-                  className="w-full rounded-2xl border border-[#d8d0c1] bg-white px-4 py-3 text-left shadow-sm"
-                >
-                  {calendarDate.month}월 ⌄
-                </button>
-                {showMonthMenu && (
-                  <div className="absolute left-0 top-full z-10 mt-2 w-full max-h-72 overflow-y-auto rounded-2xl border border-[#d8d0c1] bg-white shadow-xl">
+                  </select>
+                  <span className="calendar-native-select-arrow">▾</span>
+                </div>
+                <div className="relative inline-flex">
+                  <select
+                    value={calendarDate.month}
+                    onChange={(e) => setCalendarDate((prev) => ({ ...prev, month: Number(e.target.value) }))}
+                    className="calendar-native-select calendar-native-select-month"
+                  >
                     {monthOptions.map((month) => (
-                      <button
-                        key={month}
-                        type="button"
-                        onClick={() => {
-                          setCalendarDate((prev) => ({ ...prev, month }));
-                          setShowMonthMenu(false);
-                        }}
-                        className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm ${
-                          month === calendarDate.month ? "bg-[#e8d7b4] text-[#1f1a17]" : "text-[#4a4135]"
-                        }`}
-                      >
-                        <span>{month}월</span>
-                        {month === calendarDate.month ? <span>✓</span> : null}
-                      </button>
+                      <option key={month} value={month}>
+                        {month}월
+                      </option>
                     ))}
-                  </div>
-                )}
+                  </select>
+                  <span className="calendar-native-select-arrow">▾</span>
+                </div>
               </div>
             </div>
           </aside>

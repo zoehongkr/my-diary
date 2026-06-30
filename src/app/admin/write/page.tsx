@@ -7,6 +7,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 
 export default function AdminWritePage() {
   const [entryDate, setEntryDate] = useState(new Date().toISOString().slice(0, 10));
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -75,6 +76,7 @@ export default function AdminWritePage() {
       const imageUrls = imageFiles.length ? await uploadDiaryImages(imageFiles) : [];
       const result = await createPost({
         entryDate,
+        title: title.trim() || null,
         content,
         youtubeUrl: youtubeUrl.trim() || null,
         imageUrls,
@@ -123,6 +125,17 @@ export default function AdminWritePage() {
               onChange={(event) => setEntryDate(event.target.value)}
               className="w-full rounded-3xl border border-[#d8d0c1] bg-[#fbf7f0] px-4 py-3 text-sm text-[#2e2a24] outline-none transition focus:border-[#7b541f]"
               required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[#3d3428]">제목</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              className="w-full rounded-3xl border border-[#d8d0c1] bg-[#fbf7f0] px-4 py-3 text-sm text-[#2e2a24] outline-none transition focus:border-[#7b541f]"
+              placeholder="제목을 입력하세요."
             />
           </div>
 

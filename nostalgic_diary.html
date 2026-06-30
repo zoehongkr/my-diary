@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>일기</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #fff;
+      color: #111;
+      font-family: "Times New Roman", "Batang", "Gungsuh", serif;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+    a { color: inherit; text-decoration: none; }
+    a:hover { color: #c99b4d; }
+
+    .page { max-width: 1120px; margin: 44px auto 80px; padding: 0 28px; }
+    header { display: flex; align-items: center; gap: 22px; margin-bottom: 92px; }
+    .banner {
+      width: 150px; height: 88px; background: #050505; border-radius: 3px;
+      display: flex; align-items: center; justify-content: center; color: #f5f0e8;
+      font-size: 13px; line-height: 1.6; text-align: center; letter-spacing: -0.02em;
+      box-shadow: inset 18px 0 25px rgba(183,113,48,.45);
+    }
+    nav { color: #777; font-size: 15px; letter-spacing: 0.04em; white-space: nowrap; }
+    nav span { color: #cfcfcf; margin: 0 10px; }
+    .home-link { margin-left: auto; color: #d8a44e; font-size: 15px; }
+
+    .title { margin-left: 12px; color: #654a27; font-size: 28px; font-weight: normal; letter-spacing: -0.04em; }
+    .rule { border-top: 1px solid #cfcfcf; margin: 24px 0 0; }
+    .content { display: grid; grid-template-columns: minmax(0, 1fr) 330px; min-height: 560px; }
+    .diary { padding: 48px 62px 0 12px; }
+    .date { font-weight: bold; margin-bottom: 24px; }
+    .entry { white-space: pre-line; letter-spacing: -0.01em; }
+    .calendar-area { border-left: 1px solid #cfcfcf; padding: 48px 0 0 58px; }
+    .month-title { text-align: center; margin-bottom: 28px; font-size: 16px; }
+    table { border-collapse: collapse; margin: 0 auto; }
+    th, td { width: 28px; height: 28px; text-align: center; font-size: 15px; }
+    th { font-weight: normal; }
+    .sun { color: #ff79db; }
+    .sat { color: #55bfff; }
+    td button {
+      border: 0; background: transparent; font: inherit; cursor: pointer; padding: 0; width: 100%; height: 100%;
+    }
+    td button:hover { color: #d8a44e; }
+    td button.has-entry { font-weight: bold; }
+    td button.active { color: #a06c20; text-decoration: underline; text-underline-offset: 4px; }
+    .cal-nav { margin-top: 24px; text-align: center; color: #888; }
+    .cal-nav button { border: 0; background: transparent; color: #888; cursor: pointer; font: inherit; }
+    .selectors { margin-top: 10px; text-align: center; }
+    select { font-family: inherit; font-size: 14px; margin: 0 4px; }
+
+    @media (max-width: 760px) {
+      .page { margin-top: 24px; padding: 0 18px; }
+      header { gap: 14px; margin-bottom: 54px; align-items: flex-start; flex-wrap: wrap; }
+      .banner { width: 138px; height: 78px; }
+      nav { width: calc(100% - 160px); line-height: 2; }
+      .home-link { margin-left: 0; width: 100%; }
+      .content { grid-template-columns: 1fr; }
+      .diary { padding: 38px 6px 28px; }
+      .calendar-area { border-left: 0; border-top: 1px solid #ddd; padding: 34px 0 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="banner">사라져 가는<br />모든 것들에 대한 미스</div>
+      <nav>
+        <a href="#">언니네이발관</a><span>|</span><a href="#">새소식</a><span>|</span><a href="#">특집</a><span>|</span><a href="#">게시판</a><span>|</span><a href="#">섬과창구</a>
+      </nav>
+      <a class="home-link" href="#">◀처음으로</a>
+    </header>
+
+    <h1 class="title">일기</h1>
+    <div class="rule"></div>
+
+    <main class="content">
+      <section class="diary">
+        <div class="date" id="dateText"></div>
+        <div class="entry" id="entryText"></div>
+      </section>
+
+      <aside class="calendar-area">
+        <div class="month-title" id="monthTitle"></div>
+        <table aria-label="calendar">
+          <thead>
+            <tr><th class="sun">日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th class="sat">土</th></tr>
+          </thead>
+          <tbody id="calendarBody"></tbody>
+        </table>
+        <div class="cal-nav">
+          <button id="prevMonth">이전달 &lt;&lt;</button>
+          <button id="nextMonth">&gt;&gt; 다음달</button>
+        </div>
+        <div class="selectors">
+          <select id="yearSelect"></select>
+          <select id="monthSelect"></select>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const diaryData = {
+      "2005-06-12": `도대체 문학이 무엇이긴데
+작가라는 사람들은
+잘못했다 그 한마디를 하기가
+저토록 어려운 것일까.
+
+내가 잘못했다 인정한다. 그러나 문학은 내 목숨과도 같은 것이니 독자들께서 한번만 용서해주시면 앞으로 절치부심하겠다. 라고만 하면 대체 뭐가 문제겠나. 그래도 너 다시는 글 쓰지 말라고 악다구니 쓸 인간들이 얼마나 되겠나고. 환장 하겠다 정말. 바로 이 글을 쓰는 지금도 내 앞에는 아직 외딴방이 소중하게 놓여 있는데..`,
+      "2015-06-23": `도대체 문학이 무엇이긴데
+작가라는 사람들은
+잘못했다 그 한마디를 하기가
+저토록 어려운 것일까.
+
+내가 잘못했다 인정한다. 그러나 문학은 내 목숨과도 같은 것이니 독자들께서 한번만 용서해주시면 앞으로 절치부심하겠다. 라고만 하면 대체 뭐가 문제겠나. 그래도 너 다시는 글 쓰지 말라고 악다구니 쓸 인간들이 얼마나 되겠나고. 환장 하겠다 정말. 바로 이 글을 쓰는 지금도 내 앞에는 아직 외딴방이 소중하게 놓여 있는데..`,
+      "2021-08-05": `오늘의 일기.
+
+흰 여백이 많으면 마음이 조금 조용해진다. 아주 작은 글씨와 느린 달력, 그리고 별일 아닌 문장 몇 줄이면 충분한 날도 있다.`
+    };
+
+    let currentYear = 2015;
+    let currentMonth = 6;
+    let selectedDate = "2015-06-23";
+
+    const dateText = document.getElementById('dateText');
+    const entryText = document.getElementById('entryText');
+    const calendarBody = document.getElementById('calendarBody');
+    const monthTitle = document.getElementById('monthTitle');
+    const yearSelect = document.getElementById('yearSelect');
+    const monthSelect = document.getElementById('monthSelect');
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function dateKey(y, m, d) { return `${y}-${pad(m)}-${pad(d)}`; }
+
+    function setDiary(key) {
+      selectedDate = key;
+      const [y, m, d] = key.split('-').map(Number);
+      dateText.textContent = `${y}년  ${m}월  ${d}일`;
+      entryText.textContent = diaryData[key] || `이 날의 일기는 아직 없습니다.\n\n원하는 날짜를 선택해서 새 글을 넣을 수 있습니다.`;
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      monthTitle.textContent = `${currentYear}년  ${currentMonth}월`;
+      yearSelect.value = currentYear;
+      monthSelect.value = currentMonth;
+      calendarBody.innerHTML = '';
+
+      const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
+      const lastDate = new Date(currentYear, currentMonth, 0).getDate();
+      let day = 1;
+
+      for (let r = 0; r < 6; r++) {
+        const tr = document.createElement('tr');
+        for (let c = 0; c < 7; c++) {
+          const td = document.createElement('td');
+          if (!(r === 0 && c < firstDay) && day <= lastDate) {
+            const key = dateKey(currentYear, currentMonth, day);
+            const btn = document.createElement('button');
+            btn.textContent = day;
+            if (diaryData[key]) btn.classList.add('has-entry');
+            if (key === selectedDate) btn.classList.add('active');
+            btn.onclick = () => setDiary(key);
+            td.appendChild(btn);
+            day++;
+          }
+          tr.appendChild(td);
+        }
+        calendarBody.appendChild(tr);
+        if (day > lastDate) break;
+      }
+    }
+
+    function buildSelectors() {
+      for (let y = 2000; y <= 2026; y++) {
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = `${y}년`;
+        yearSelect.appendChild(opt);
+      }
+      for (let m = 1; m <= 12; m++) {
+        const opt = document.createElement('option');
+        opt.value = m; opt.textContent = `${m}월`;
+        monthSelect.appendChild(opt);
+      }
+      yearSelect.onchange = () => { currentYear = Number(yearSelect.value); renderCalendar(); };
+      monthSelect.onchange = () => { currentMonth = Number(monthSelect.value); renderCalendar(); };
+    }
+
+    document.getElementById('prevMonth').onclick = () => {
+      currentMonth--;
+      if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+      renderCalendar();
+    };
+    document.getElementById('nextMonth').onclick = () => {
+      currentMonth++;
+      if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+      renderCalendar();
+    };
+
+    buildSelectors();
+    setDiary(selectedDate);
+  </script>
+</body>
+</html>

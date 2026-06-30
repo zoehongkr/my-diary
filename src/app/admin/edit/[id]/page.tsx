@@ -13,6 +13,7 @@ export default function AdminEditPage() {
 
   const [loading, setLoading] = useState(true);
   const [entryDate, setEntryDate] = useState("");
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -35,6 +36,7 @@ export default function AdminEditPage() {
       }
 
       setEntryDate(post.entryDate);
+      setTitle(post.title ?? "");
       setContent(post.content);
       setYoutubeUrl(post.youtubeUrl ?? "");
       setExistingImages(post.images.map((i) => i.imageUrl));
@@ -86,6 +88,7 @@ export default function AdminEditPage() {
 
       const res = await updatePost(id, {
         entryDate,
+        title: title.trim() || null,
         content,
         youtubeUrl: youtubeUrl.trim() || null,
         imageUrls: imageUrls ?? undefined,
@@ -152,6 +155,17 @@ export default function AdminEditPage() {
               onChange={(e) => setEntryDate(e.target.value)}
               className="w-full rounded-3xl border border-[#d8d0c1] bg-[#fbf7f0] px-4 py-3 text-sm text-[#2e2a24] outline-none transition focus:border-[#7b541f]"
               required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[#3d3428]">제목</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-3xl border border-[#d8d0c1] bg-[#fbf7f0] px-4 py-3 text-sm text-[#2e2a24] outline-none transition focus:border-[#7b541f]"
+              placeholder="제목을 입력하세요."
             />
           </div>
 

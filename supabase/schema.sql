@@ -5,6 +5,7 @@ create table if not exists posts (
   id uuid primary key default gen_random_uuid(),
   entry_date date not null,
   content text not null,
+  title text,
   youtube_url text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()

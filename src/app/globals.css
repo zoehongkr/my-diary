@@ -22,5 +22,55 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Times New Roman", Batang, Gungsuh, serif;
+}
+
+.calendar-native-select {
+  width: 86px;
+  height: 30px;
+  padding: 0 20px 0 8px;
+  border: 1px solid #111;
+  border-radius: 2px;
+  background: #fff;
+  color: #111;
+  font-size: 15px;
+  line-height: 30px;
+  text-align: center;
+  text-align-last: center;
+  appearance: none;
+}
+
+.calendar-native-select + .calendar-native-select {
+  width: 58px;
+}
+
+.calendar-native-select option {
+  padding: 0.25rem 0.5rem;
+  text-align: center;
+}
+
+@media (max-width: 1023px) {
+  .calendar-native-select {
+    width: auto;
+    min-width: 70px;
+  }
+}
+
+.calendar-native-select-year {
+  width: 86px;
+}
+
+.calendar-native-select-month {
+  width: 58px;
+}
+
+.calendar-native-select-arrow {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #111;
+  font-size: 14px;
+  line-height: 1;
 }

@@ -39,14 +39,14 @@ export function AdminActions() {
         <>
           <Link
             href="/admin/write"
-            className="rounded-full bg-[#7b541f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#6b492f]"
+            className="rounded-sm border border-[#111] bg-[#111] px-3 py-1.5 text-sm font-semibold text-white"
           >
             글쓰기
           </Link>
           <button
             type="button"
             onClick={handleSignOut}
-            className="rounded-full border border-[#d8d0c1] bg-white px-4 py-2 text-sm font-semibold text-[#3d3428] transition hover:bg-[#fbf7f0]"
+            className="rounded-sm border border-[#111] bg-white px-3 py-1.5 text-sm font-semibold text-[#111]"
           >
             로그아웃
           </button>
@@ -54,7 +54,7 @@ export function AdminActions() {
       ) : (
         <Link
           href="/admin/login"
-          className="rounded-full border border-[#d8d0c1] bg-white px-4 py-2 text-sm font-semibold text-[#3d3428] transition hover:bg-[#fbf7f0]"
+          className="rounded-sm border border-[#111] bg-white px-3 py-1.5 text-sm font-semibold text-[#111]"
         >
           관리자 로그인
         </Link>

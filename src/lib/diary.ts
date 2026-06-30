@@ -4,6 +4,7 @@ type PostRow = {
   id: string;
   entry_date: string;
   content: string;
+  title?: string | null;
   youtube_url: string | null;
   created_at: string;
   updated_at: string;
@@ -18,6 +19,7 @@ export type DiaryPost = {
   id: string;
   entryDate: string;
   content: string;
+  title?: string | null;
   youtubeUrl: string | null;
   images: Array<{ id: string; imageUrl: string; sortOrder: number }>;
   createdAt: string;
@@ -77,6 +79,7 @@ export async function getPostsByDate(year: number, month: number, day: number) {
       id: typedRow.id,
       entryDate: typedRow.entry_date,
       content: typedRow.content,
+      title: typedRow.title ?? null,
       youtubeUrl: typedRow.youtube_url,
       createdAt: typedRow.created_at,
       images: typedRow.post_images?.map((image) => ({
@@ -172,11 +175,13 @@ export async function uploadDiaryImages(files: File[]) {
 
 export async function createPost({
   entryDate,
+  title,
   content,
   youtubeUrl,
   imageUrls,
 }: {
   entryDate: string;
+  title?: string | null;
   content: string;
   youtubeUrl: string | null;
   imageUrls: string[];
@@ -186,6 +191,7 @@ export async function createPost({
     .insert([
       {
         entry_date: entryDate,
+        title,
         content,
         youtube_url: youtubeUrl,
       },
@@ -232,6 +238,7 @@ export async function getPostById(postId: string) {
     id: row.id,
     entryDate: row.entry_date,
     content: row.content,
+    title: row.title ?? null,
     youtubeUrl: row.youtube_url,
     images: row.post_images?.map((image) => ({
       id: image.id,
@@ -243,18 +250,20 @@ export async function getPostById(postId: string) {
 
 export async function updatePost(postId: string, {
   entryDate,
+  title,
   content,
   youtubeUrl,
   imageUrls,
 }: {
   entryDate: string;
+  title?: string | null;
   content: string;
   youtubeUrl: string | null;
   imageUrls?: string[] | null; // if undefined -> leave images unchanged; if [] -> remove all
 }) {
   const { error } = await supabaseClient
     .from("posts")
-    .update({ entry_date: entryDate, content, youtube_url: youtubeUrl })
+    .update({ entry_date: entryDate, title, content, youtube_url: youtubeUrl })
     .eq("id", postId);
 
   if (error) return { error };

@@ -114,72 +114,90 @@ export default function Comments({ postId, initial = [] }: { postId?: string | n
     }
   }
 
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="mt-8 rounded-2xl border border-[#e7e0d2] bg-white p-6">
-      <h3 className="mb-4 text-lg font-semibold text-[#2f2314]">댓글</h3>
+    <div className="mt-8">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="inline-flex items-center gap-2 border-t border-[#ccc] bg-white py-2 text-sm font-serif text-[#111] transition hover:text-[#000]"
+      >
+        <span className="text-[15px]">댓글 ({comments.length}) {isOpen ? "▴" : "▾"}</span>
+      </button>
 
-      <div className="space-y-4">
-        {comments.length === 0 ? (
-          <p className="text-sm text-[#6b5b4a]">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</p>
-        ) : (
-          comments.map((c) => (
-            <div key={c.id} className="flex items-start justify-between gap-4 rounded-2xl border border-[#f1ede6] bg-[#fbf7f0] p-3">
-              <div>
-                <div className="text-sm font-semibold text-[#3d3428]">{c.nickname}</div>
-                <div className="mt-1 text-sm text-[#423627]">{c.content}</div>
-                <div className="mt-2 text-xs text-[#7b6a54]">{new Date(c.created_at).toLocaleString()}</div>
+      {isOpen ? (
+        <div className="mt-2 rounded-[4px] border border-[#ccc] bg-white p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-[16px] font-semibold text-[#111]">댓글</h3>
+          </div>
+
+          <div className="space-y-3 text-[#111]">
+            {comments.length === 0 ? (
+              <p className="text-[13px] text-[#6b5b4a]">아직 댓글이 없습니다.</p>
+            ) : (
+              <div className="space-y-3">
+                {comments.map((c) => (
+                  <div key={c.id} className="rounded-[4px] border border-[#ddd] bg-white p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="text-[13px] font-semibold text-[#111]">{c.nickname}</div>
+                        <div className="text-[13px] leading-6 text-[#423627]">{c.content}</div>
+                        <div className="text-[12px] text-[#7b6a54]">{new Date(c.created_at).toLocaleString()}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(c.id)}
+                        className="rounded-[4px] border border-[#bbb] bg-white px-2 py-1 text-[13px] font-semibold text-[#111]"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div>
-                <button
-                  onClick={() => handleDelete(c.id)}
-                  className="rounded-full border border-[#d8d0c1] bg-white px-3 py-1 text-xs font-semibold text-[#3d3428]"
-                >
-                  삭제
-                </button>
-              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+            {error ? <div className="rounded-[4px] bg-[#fee3d0] p-3 text-[13px] text-[#7c3820]">{error}</div> : null}
+
+            <div className="grid gap-3 sm:grid-cols-[1.85fr_1fr]">
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="닉네임 (선택)"
+                className="rounded-[4px] border border-[#bbb] bg-white px-2 py-2 text-[14px] text-[#111]"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="비밀번호 (선택)"
+                className="rounded-[4px] border border-[#bbb] bg-white px-2 py-2 text-[14px] text-[#111]"
+              />
             </div>
-          ))
-        )}
-      </div>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-3">
-        {error ? <div className="rounded-2xl bg-[#fee3d0] p-3 text-sm text-[#7c3820]">{error}</div> : null}
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="댓글 내용을 입력하세요"
+              className="h-[132px] w-full rounded-[4px] border border-[#bbb] bg-white px-2 py-2 text-[14px] text-[#111]"
+            />
 
-        <div className="grid grid-cols-3 gap-3">
-          <input
-            type="text"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            placeholder="닉네임 (선택)"
-            className="col-span-2 rounded-2xl border border-[#d8d0c1] bg-[#fbf7f0] px-3 py-2 text-sm text-[#2e2a24]"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="비밀번호 (선택)"
-            className="rounded-2xl border border-[#d8d0c1] bg-[#fbf7f0] px-3 py-2 text-sm text-[#2e2a24]"
-          />
+            <div className="flex items-center justify-end">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="rounded-[2px] border border-[#111] bg-[#111] px-3 py-1.5 text-[14px] font-semibold text-white disabled:opacity-60"
+              >
+                등록
+              </button>
+            </div>
+          </form>
         </div>
-
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="댓글 내용을 입력하세요"
-          className="w-full rounded-2xl border border-[#d8d0c1] bg-[#fbf7f0] px-3 py-3 text-sm text-[#2e2a24]"
-          rows={4}
-        />
-
-        <div className="flex items-center justify-end">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded-2xl bg-[#7b541f] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-          >
-            등록
-          </button>
-        </div>
-      </form>
+      ) : null}
     </div>
   );
 }
